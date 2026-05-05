@@ -52,6 +52,7 @@ class ConfigSidebar(Gtk.Box):
     expander_row_encoding_presets: Adw.ExpanderRow = Gtk.Template.Child()
     expander_row_detection_models: Adw.ExpanderRow = Gtk.Template.Child()
     expander_row_restoration_models: Adw.ExpanderRow = Gtk.Template.Child()
+    spin_row_detection_confidence: Adw.SpinRow = Gtk.Template.Child()
     spin_row_subtitles_font_size: Adw.SpinRow = Gtk.Template.Child()
 
     def __init__(self, **kwargs):
@@ -128,6 +129,7 @@ class ConfigSidebar(Gtk.Box):
         self.switch_row_fp16.set_active(config.fp16_enabled)
         self.switch_row_detect_faces.set_active(config.detect_face_mosaics)
         self.switch_row_detect_faces.set_visible(config.mosaic_detection_model != 'v2')
+        self.spin_row_detection_confidence.set_value(config.mosaic_detection_confidence)
         self.switch_row_mp4_fast_start.set_active(config.mp4_fast_start)
         self.spin_row_subtitles_font_size.set_value(config.subtitles_font_size)
 

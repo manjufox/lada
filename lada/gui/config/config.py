@@ -49,6 +49,7 @@ class Config(GObject.Object):
         'show_mosaic_detections': False,
         'temp_directory': tempfile.gettempdir(),
         'detect_face_mosaics': False,
+        'mosaic_detection_confidence': 0.15,
         'subtitles_font_size': 16,
     }
 
@@ -74,6 +75,7 @@ class Config(GObject.Object):
         self._temp_directory = self._defaults['temp_directory']
         self._fp16_enabled = self._defaults['fp16_enabled']
         self._detect_face_mosaics = self._defaults['detect_face_mosaics']
+        self._mosaic_detection_confidence = self._defaults['mosaic_detection_confidence']
         self._subtitles_font_size = self._defaults['subtitles_font_size']
 
         self.save_lock = threading.Lock()
@@ -303,6 +305,18 @@ class Config(GObject.Object):
         self.save()
 
     @GObject.Property()
+    def mosaic_detection_confidence(self) -> float:
+        return self._mosaic_detection_confidence
+
+    @mosaic_detection_confidence.setter
+    def mosaic_detection_confidence(self, value: float):
+        value = round(value, 2)
+        if value == self._mosaic_detection_confidence:
+            return
+        self._mosaic_detection_confidence = value
+        self.save()
+
+    @GObject.Property()
     def subtitles_font_size(self):
         return self._subtitles_font_size
 
@@ -365,6 +379,7 @@ class Config(GObject.Object):
         self.temp_directory = self._defaults['temp_directory']
         self.validate_and_set_device(self._defaults['device'])
         self.detect_face_mosaics = self._defaults['detect_face_mosaics']
+        self.mosaic_detection_confidence = self._defaults['mosaic_detection_confidence']
         self.subtitles_font_size = self._defaults['subtitles_font_size']
         self.save()
 
@@ -397,6 +412,7 @@ class Config(GObject.Object):
             'show_mosaic_detections': self._show_mosaic_detections,
             'temp_directory': self._temp_directory,
             'detect_face_mosaics': self._detect_face_mosaics,
+            'mosaic_detection_confidence': self._mosaic_detection_confidence,
             'subtitles_font_size': self._subtitles_font_size,
         }
 

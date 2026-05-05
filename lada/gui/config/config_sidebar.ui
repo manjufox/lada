@@ -25,6 +25,23 @@ SPDX-License-Identifier: AGPL-3.0
                                         <property name="title" translatable="true">Detection model</property>
                                         <property name="show-enable-switch">false</property>
                                         <property name="expanded">false</property>
+                                        <child>
+                                            <object class="AdwSpinRow" id="spin_row_detection_confidence">
+                                                <property name="title" translatable="true">Detection confidence</property>
+                                                <property name="subtitle" translatable="true">Confidence threshold for mosaic detection. Lower values detect more but may cause false positives.</property>
+                                                <signal name="notify::value"
+                                                        handler="spin_row_detection_confidence_callback"/>
+                                                <property name="adjustment">
+                                                    <object class="GtkAdjustment">
+                                                        <property name="lower">0.01</property>
+                                                        <property name="upper">0.99</property>
+                                                        <property name="value">0.15</property>
+                                                        <property name="step-increment">0.01</property>
+                                                    </object>
+                                                </property>
+                                                <property name="digits">2</property>
+                                            </object>
+                                        </child>
                                     </object>
                                 </child>
                                <child>

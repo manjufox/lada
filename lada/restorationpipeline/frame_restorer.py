@@ -25,7 +25,7 @@ logging.basicConfig(level=LOG_LEVEL)
 class FrameRestorer:
     def __init__(self, device, video_file, max_clip_length, mosaic_restoration_model_name,
                  mosaic_detection_model: Yolo11SegmentationModel, mosaic_restoration_model, preferred_pad_mode,
-                 mosaic_detection=False):
+                 mosaic_detection=False, mosaic_expand_frames=0):
         self.device = torch.device(device)
         self.mosaic_restoration_model_name = mosaic_restoration_model_name
         self.max_clip_length = max_clip_length
@@ -36,6 +36,7 @@ class FrameRestorer:
         self.start_ns = 0
         self.start_frame = 0
         self.mosaic_detection = mosaic_detection
+        self.mosaic_expand_frames = mosaic_expand_frames
         self.eof = False
         self.stop_requested = False
 
@@ -315,6 +316,7 @@ class FrameRestorer:
             frame_num = self.start_frame
             queue_marker = None
             clip_buffer = []
+            mosaic_expand_remaining = 0
 
             while not (self.eof or self.stop_requested):
                 _frame_result = self._read_next_frame(video_frames_generator, frame_num)
@@ -325,11 +327,16 @@ class FrameRestorer:
                     self.frame_restoration_queue.put(EOF_MARKER)
                     break
                 num_mosaics_detected, frame, frame_pts = _frame_result
+
                 if num_mosaics_detected > 0:
-                    while queue_marker is None and not self._clip_buffer_contains_all_cips_needed_for_current_restoration(frame_num, num_mosaics_detected, clip_buffer):
-                        queue_marker = self._read_next_clip(frame_num, clip_buffer)
-                    if queue_marker is STOP_MARKER:
-                        break
+                    mosaic_expand_remaining = self.mosaic_expand_frames
+
+                if num_mosaics_detected > 0 or mosaic_expand_remaining > 0:
+                    if num_mosaics_detected > 0:
+                        while queue_marker is None and not self._clip_buffer_contains_all_cips_needed_for_current_restoration(frame_num, num_mosaics_detected, clip_buffer):
+                            queue_marker = self._read_next_clip(frame_num, clip_buffer)
+                        if queue_marker is STOP_MARKER:
+                            break
 
                     self._restore_frame(frame, frame_num, clip_buffer)
                     self.frame_restoration_queue.put((frame, frame_pts))
@@ -337,6 +344,8 @@ class FrameRestorer:
                         logger.debug("frame restoration worker: frame_restoration_queue producer unblocked")
                         break
                     self._collect_garbage(clip_buffer)
+                    if mosaic_expand_remaining > 0 and num_mosaics_detected == 0:
+                        mosaic_expand_remaining -= 1
                 else:
                     self.frame_restoration_queue.put((frame, frame_pts))
                     if self.stop_requested:
