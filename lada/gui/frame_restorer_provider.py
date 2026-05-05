@@ -27,6 +27,7 @@ class FrameRestorerOptions:
     passthrough: bool
     fp16_enabled: bool
     detect_face_mosaics: bool
+    mosaic_detection_confidence: float
 
 class FrameRestorerOptionsBuilder:
     def __init__(self, initial: FrameRestorerOptions | None = None):
@@ -42,6 +43,7 @@ class FrameRestorerOptionsBuilder:
                 "passthrough": initial.passthrough,
                 "fp16_enabled": initial.fp16_enabled,
                 "detect_face_mosaics": initial.detect_face_mosaics,
+                "mosaic_detection_confidence": initial.mosaic_detection_confidence,
             }
 
     def mosaic_restoration_model_name(self, value: str) -> 'FrameRestorerOptionsBuilder':
@@ -78,6 +80,10 @@ class FrameRestorerOptionsBuilder:
 
     def detect_face_mosaics(self, value: bool) -> 'FrameRestorerOptionsBuilder':
         self._properties["mosaic_detection"] = value
+        return self
+
+    def mosaic_detection_confidence(self, value: float) -> 'FrameRestorerOptionsBuilder':
+        self._properties["mosaic_detection_confidence"] = value
         return self
 
     def build(self) -> FrameRestorerOptions:
@@ -119,6 +125,9 @@ class FrameRestorerProvider:
             if self.models_cache.get("detect_face_mosaics") != self.options.detect_face_mosaics:
                 cache_miss = True
                 logger.info(f"Detect Face Mosaics setting changed from {self.models_cache.get('detect_face_mosaics')} to {self.options.detect_face_mosaics}. Reloading models...")
+            if self.models_cache.get("mosaic_detection_confidence") != self.options.mosaic_detection_confidence:
+                cache_miss = True
+                logger.info(f"Detection confidence changed from {self.models_cache.get('mosaic_detection_confidence')} to {self.options.mosaic_detection_confidence}. Reloading models...")
 
         if cache_miss:
             self._clear_cache()
@@ -128,6 +137,7 @@ class FrameRestorerProvider:
             mosaic_detection_model, mosaic_restoration_model, mosaic_restoration_model_preferred_pad_mode = load_models(
                 torch.device(self.options.device), self.options.mosaic_restoration_model_name, mosaic_restoration_model_path, None,
                 mosaic_detection_path, fp16=self.options.fp16_enabled, detect_face_mosaics=self.options.detect_face_mosaics,
+                conf=self.options.mosaic_detection_confidence,
             )
 
             self.models_cache = dict(mosaic_restoration_model_name=self.options.mosaic_restoration_model_name,
@@ -136,7 +146,8 @@ class FrameRestorerProvider:
                                      mosaic_detection_model=mosaic_detection_model,
                                      mosaic_restoration_model=mosaic_restoration_model,
                                      mosaic_restoration_model_preferred_pad_mode=mosaic_restoration_model_preferred_pad_mode,
-                                     detect_face_mosaics=self.options.detect_face_mosaics)
+                                     detect_face_mosaics=self.options.detect_face_mosaics,
+                                     mosaic_detection_confidence=self.options.mosaic_detection_confidence)
 
         return FrameRestorer(self.options.device,
                              self.options.video_metadata.video_file,

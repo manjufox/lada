@@ -349,6 +349,11 @@ class ConfigSidebar(Gtk.Box):
 
     @Gtk.Template.Callback()
     @skip_if_uninitialized
+    def spin_row_detection_confidence_callback(self, spin_row, value):
+        self._config.mosaic_detection_confidence = spin_row.get_property("value")
+
+    @Gtk.Template.Callback()
+    @skip_if_uninitialized
     def switch_row_mp4_fast_start_active_callback(self, switch_row, active):
         self._config.mp4_fast_start = switch_row.get_property("active")
 

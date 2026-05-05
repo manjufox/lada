@@ -351,6 +351,11 @@ class WatchView(Gtk.Widget):
                 self.frame_restorer_options = FrameRestorerOptionsBuilder(self.frame_restorer_options).detect_face_mosaics(self._config.detect_face_mosaics).build()
         self._config.connect("notify::detect-face-mosaics", on_detect_face_mosaics)
 
+        def on_mosaic_detection_confidence(object, spec):
+            if self._frame_restorer_options:
+                self.frame_restorer_options = FrameRestorerOptionsBuilder(self.frame_restorer_options).mosaic_detection_confidence(self._config.mosaic_detection_confidence).build()
+        self._config.connect("notify::mosaic-detection-confidence", on_mosaic_detection_confidence)
+
         def on_subtitles_font_size(object, spec):
             if self.pipeline_manager:
                 self.pipeline_manager.set_subtitle_font_size(self._config.subtitles_font_size)
@@ -512,7 +517,8 @@ class WatchView(Gtk.Widget):
                                                            self.config.show_mosaic_detections,
                                                            False,
                                                            self.config.fp16_enabled,
-                                                           self.config.detect_face_mosaics)
+                                                           self.config.detect_face_mosaics,
+                                                           self.config.mosaic_detection_confidence)
         self.has_audio = audio_utils.get_audio_codec(self.video_metadata.video_file) is not None
         self.button_mute_unmute.set_sensitive(self.has_audio)
         self.set_speaker_icon(mute=not self.has_audio or self.config.mute_audio)

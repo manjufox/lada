@@ -15,7 +15,8 @@ def load_models(
     mosaic_restoration_config_path: str | None,
     mosaic_detection_model_path: str,
     fp16: bool,
-    detect_face_mosaics: bool):
+    detect_face_mosaics: bool,
+    conf: float = 0.15):
     if mosaic_restoration_model_name.startswith("deepmosaics"):
         from lada.models.deepmosaics.models import loadmodel
         from lada.restorationpipeline.deepmosaics_mosaic_restorer import DeepmosaicsMosaicRestorer
@@ -38,5 +39,5 @@ def load_models(
             logger.info("Mosaic detection model v2 does not support detecting face mosaics. Use detection models v3 or newer. Ignoring...")
     else:
         classes = None
-    mosaic_detection_model = Yolo11SegmentationModel(mosaic_detection_model_path, device, classes=classes, conf=0.15, fp16=fp16)
+    mosaic_detection_model = Yolo11SegmentationModel(mosaic_detection_model_path, device, classes=classes, conf=conf, fp16=fp16)
     return mosaic_detection_model, mosaic_restoration_model, pad_mode
